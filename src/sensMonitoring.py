@@ -43,8 +43,13 @@ class SensorMonitoring:
         
     def insertValue(self, val,  pos, date,time):
         params = (str(val),date,time,str(pos))
+        cursor = self.conn.execute("select count(*) from Sensori where POS=?", (str(pos)))
         
-        self.conn.execute("INSERT INTO Sensori (VALUE, DATA, ORA, POS) VALUES (?,?,?,?);", params)
+        for row in cursor:
+            if row[0]>0:
+                self.conn.execute("UPDATE Sensori set VALUE=?, DATA=?, ORA=? WHERE POS=?;", params)
+            else:
+                self.conn.execute("insert into Sensori (VALUE, DATA, ORA, POS) VALUES (?,?,?,?);", params)
         self.conn.commit()
         
     def insertDescByPos(self, desc, pos):

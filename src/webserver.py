@@ -8,6 +8,7 @@ Implementa il web server utilizzato per avere come interfaccia lato client una p
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
 from os import curdir, sep
 import webclient
+import phidgets
 import cgi
 import shutil
 import os
@@ -16,6 +17,8 @@ import sensMonitoring as sm
 import json
 from operator import pos
 from datetime import datetime
+import time
+import thread
 
 PORT_NUMBER = 8080
 
@@ -138,6 +141,8 @@ class myHandler(BaseHTTPRequestHandler):
             
         #avvia monitoraggio: invio dei dati dei sensori al server
         elif self.path=="/monitoring":
+            #global ph
+            #ph.ponteDiWheatstone()
             monitoring = sm.SensorMonitoring()
             s = monitoring.getSensorValue()
             monitoring.close()
@@ -261,19 +266,19 @@ class myHandler(BaseHTTPRequestHandler):
 
 try:
     #ATTENZIONE DA ELIMINARE SOLO PER PROVA!!!
-    monitoring = sm.SensorMonitoring()
-    monitoring.open()
-    monitoring.create()
-    monitoring.insertPos(4)
-    date = datetime.now().strftime('%Y-%m-%d')
-    time = datetime.now().strftime('%H:%M:%S')
-    monitoring.insertValueByPos(152.36, 4, date, time)
-    monitoring.insertDescByPos("Resistenza 20 ohm", 4)
-    monitoring.insertPos(6)
-    time = datetime.now().strftime('%H:%M:%S')
-    monitoring.insertValueByPos(0.32, 6, date, time)
-    monitoring.insertDescByPos("Fotoresistenza", 6)
-    monitoring.close()
+#     monitoring = sm.SensorMonitoring()
+#     monitoring.open()
+#     monitoring.create()
+#     monitoring.insertPos(4)
+#     date = datetime.now().strftime('%Y-%m-%d')
+#     time = datetime.now().strftime('%H:%M:%S')
+#     monitoring.insertValueByPos(152.36, 4, date, time)
+#     monitoring.insertDescByPos("Resistenza 20 ohm", 4)
+#     monitoring.insertPos(6)
+#     time = datetime.now().strftime('%H:%M:%S')
+#     monitoring.insertValueByPos(0.32, 6, date, time)
+#     monitoring.insertDescByPos("Fotoresistenza", 6)
+#     monitoring.close()
     ##########
     
     #Create a web server and define the handler to manage the
@@ -281,9 +286,23 @@ try:
     server = HTTPServer(('', PORT_NUMBER), myHandler)
     print 'Started httpserver on port ' , PORT_NUMBER
     
-    #Wait forever for incoming htto requests
+    #instanzio l'oggetto per interfacciarmi con la scheda di acquisizione phidgets
+    ph = phidgets.Phidgets()
+    ph.run()
+    
+    #Wait forever for incoming http requests
     server.serve_forever()
+    try:
+        pass
+        #thread.start_new_thread( ph.run, ())#avvio la procedura di acquisizione
+        #thread.start_new_thread( server.serve_forever, () )#avvio il web server
+    except:
+        print "Error: unable to start thread"
 
 except KeyboardInterrupt:
     print '^C received, shutting down the web server'
+    ph.close()
     server.socket.close()
+
+while 1:
+   pass

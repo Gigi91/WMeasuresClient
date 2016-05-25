@@ -11,9 +11,9 @@ import sensMonitoring as sm
 from datetime import datetime
 
 import time
-from threading import Timer
 
 class Phidgets:
+    
     def __init__(self):
         self.V1 = 0.0
         self.V2list = [0,0,0,0,0,0,0] #lista dei valori associati alle porte analogiche, corrispondenza porta analogica posizione nella lista
@@ -114,8 +114,6 @@ class Phidgets:
                 except PhidgetException as e:
                     pass
                 
-            while self.running:
-                time.sleep(0.5)
                  
     def close(self):
         self.running = False
@@ -130,9 +128,5 @@ class Phidgets:
         
         print("Done.")
         exit(0)
-        
-#solo in fase di test
-ph = Phidgets()
-t = Timer(30.0, ph.close)
-t.start()
-ph.run()
+
+

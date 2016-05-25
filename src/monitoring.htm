@@ -8,7 +8,7 @@
 	<h2>Monitoraggio dei sensori</h2>
 </div>
 <div align="center">
-<h3>Input analogici</h3>
+<h4>Input analogici</h4>
 <table>
 	<tr>
 		<td align="center">0</td>
@@ -32,7 +32,9 @@
 	</tr>
 </table>
 <br>
-	<input type="button" name="start" value="Avvia" onclick="startMonitoring()">
+    <label>Duranta monitoraggio (in minuti)</label>
+    <input type="text" id="durata">
+	<input type="button" name="start" id="start" value="Avvia" onclick="startMonitoring()">
 </div>
 
 <br>
@@ -53,7 +55,7 @@
 </div>
 <hr>
 <div align="center">
-	<h4>Definisci nuovo sensore</h4>
+	<h4>Inserisci nuovo sensore</h4>
 	<label>Descrizione sensore</label>
 	<input type="text" id="descr">
 	<input type="button" name="saveBtn" value="Salva" onclick="save()">
@@ -94,8 +96,11 @@
 		<input type="button" id="send" value="Invia" onclick="Send()">
 	</div>
 	<div id="chart" align="center">
+		<h5>Grafico dati monitorati</h5>
 		<canvas id="myChart" width="400" height="400"></canvas>
+		<div id="statistics"></div>
 		<div id="legendDiv"></div>
+
 	</div>
 </div>
 </body>
@@ -128,7 +133,7 @@
 		clearSelect(mmf);
 		clearSelect(aaf);
 
-		for(i=1;i<=31;i++){
+		for(var i=1;i<=31;i++){
 			gg.add( new Option( i.toString() ) ); 
 			ggf.add( new Option( i.toString() ) ); 
 			if(i<=12){
@@ -137,8 +142,8 @@
 			}
 		}
 
-		year = new Date().getFullYear();
-		for(i=1900;i<=year;i++){
+		var year = new Date().getFullYear();
+		for(var i=1900;i<=year;i++){
 			aa.add( new Option( i.toString() ) ); 
 			aaf.add( new Option( i.toString() ) ); 
 		}
@@ -168,8 +173,8 @@
 		monitoring.end = end;
 		monitoring.desc = [];
 
-		for(i=0;i<sensori.length; i++){
-			cb = document.getElementById("cb"+sensori[i].ID);
+		for(var i=0;i<sensori.length; i++){
+			var cb = document.getElementById("cb"+sensori[i].ID);
 			if(cb.checked){
 				monitoring.desc.push(sensori[i].Desc);
 			}
@@ -201,10 +206,10 @@
 		xhttp.onreadystatechange = function() {
 			if (xhttp.readyState == 4 && xhttp.status == 200) {
 				//document.getElementById("message").innerHTML = xhttp.responseText;
-				data = xhttp.responseText;
+				var data = xhttp.responseText;
 				var json = JSON.parse(data);
 
-				an_input = document.getElementById("analog_input_list");
+				var an_input = document.getElementById("analog_input_list");
 				clearSelect(an_input);
 		
 				//svuoto il container dove vanno le checkbox
@@ -221,7 +226,7 @@
 					addCheckBox(json[i][0],json[i][1]);
 				}
 
-				window.setTimeout(update, 60000)//aggiorno lo status dei sensori ogni 60 secondi
+				window.setTimeout(update, 60000);//aggiorno lo status dei sensori ogni 60 secondi
 			}
 		};
 		xhttp.open("POST", "getSensorStatus", true);
@@ -231,6 +236,8 @@
 	//avvia il monitoraggio (ovvero il passaggio dei valori dei sensori al server per la registrazione di essi nel DB)
 	function startMonitoring(){
 		//TODO: richiesta ajax per l'avvio del monitoring
+		var time = document.getElementById("durata").value
+		document.getElementById("start").disabled=true;
 		var xhttp = new XMLHttpRequest();
 		xhttp.onreadystatechange = function() {
 			if (xhttp.readyState == 4 && xhttp.status == 200) {
@@ -241,6 +248,7 @@
 		};
 		xhttp.open("POST", "monitoring", true);
 		xhttp.send();
+		window.setTimeout(startMonitoring, time*60000);//invio i dati
 	}
 
 	//carica i sensori che esistono nel DB
@@ -249,10 +257,10 @@
 		xhttp.onreadystatechange = function() {
 			if (xhttp.readyState == 4 && xhttp.status == 200) {
 				//document.getElementById("demo").innerHTML = xhttp.responseText;
-				data = xhttp.responseText;
+				var data = xhttp.responseText;
 				var json = JSON.parse(data);
 
-				s_type = document.getElementById("sensor_type");
+				var s_type = document.getElementById("sensor_type");
 				clearSelect(s_type);
 				for(i =0;i<json.sensorList.length;i++)
 					s_type.add(new Option( json.sensorList[i].descr));
@@ -268,15 +276,17 @@
 		var xhttp = new XMLHttpRequest();
 		xhttp.onreadystatechange = function() {
 			if (xhttp.readyState == 4 && xhttp.status == 200) {
+				
 				document.getElementById("message").innerHTML = xhttp.responseText;
-
+				
 			}
 		};
 		xhttp.open("POST", "associa", true);
 		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
-		params = "pos="+document.getElementById("analog_input_list").value+"&descr="+document.getElementById("sensor_type").value
+		var params = "pos="+document.getElementById("analog_input_list").value+"&descr="+document.getElementById("sensor_type").value
 		params = encodeURI(params)
 		xhttp.send(params);
+		update();
 	}
 
 	//aggiunge un nuovo tipo di sensore nel db
@@ -309,8 +319,8 @@
 		data.datasets = [];
 		data.labels = [];
 		k = 0;
-		for(i =0;i<json_data.length;i++){
-			for(j=0;j<json_data[i].giorno.length; j++)
+		for(var i =0;i<json_data.length;i++){
+			for(var j=0;j<json_data[i].giorno.length; j++)
 				data.labels[k++] = json_data[i].giorno[j];
 			var r = Math.floor((Math.random() * 255) + 0);
 			var g = Math.floor((Math.random() * 255) + 0);
@@ -321,7 +331,7 @@
 			data.datasets[i].label = json_data[i].label;
 			//data.datasets[i].data = json_data[i].data;
 			data.datasets[i].data = [];
-			for(ind = 0; ind<json_data[i].data.length; ind++)
+			for(var ind = 0; ind<json_data[i].data.length; ind++)
 				data.datasets[i].data[ind] = parseFloat(json_data[i].data[ind]);
 
 			data.datasets[i].pointStrokeColor= "#fff", 
@@ -335,49 +345,9 @@
 			b = Math.floor((Math.random() * 255) + 0);
 		    data.datasets[i].pointHighlightStroke= "rgba("+r+","+g+","+b+",1)";
 		}
-		/*
-		var options = {
- 	    legendTemplate : '<ul>'
-                  +'<% for (var i=0; i<datasets.length; i++) { %>'
-                    +'<li>'
-                    +'<span style=\"background-color:<%=datasets[i].lineColor%>\"></span>'
-                    +'<% if (datasets[i].label) { %><%= datasets[i].label %><% } %>'
-                  +'</li>'
-                +'<% } %>'
-              +'</ul>'
-  		}
-			*/
-
+		
 		console.log(JSON.stringify(data));
-		/*
-		var data = { 
- 
-		    labels: ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto"], 
-		    datasets: [ 
-		        { 
-		            label: "Temperature 2013", 
-		            fillColor: "rgba(99,240,220,0.2)", 
-		            strokeColor: "rgba(99,240,220,1)", 
-		            pointColor: "rgba(99,240,220,1)", 
-		            pointStrokeColor: "#fff", 
-		            pointHighlightFill: "#fff", 
-		            pointHighlightStroke: "rgba(220,220,220,1)", 
-		            data: [8, 11, 18, 22, 24, 26, 34, 39] 
-		        }, 
-		        { 
-		            label: "Temperature 2014", 
-		            fillColor: "rgba(205,99,151,0.2)", 
-		            strokeColor: "rgba(205,99,151,1)", 
-		            pointColor: "rgba(205,99,151,1)", 
-		            pointStrokeColor: "#fff", 
-		            pointHighlightFill: "#fff", 
-		            pointHighlightStroke: "rgba(151,187,205,1)", 
-		            data: [16, 18, 22, 24, 26, 28, 32, 36] 
-		        } 
-		    ] 
-		}; 
-		*/
-
+		
 		var options = {
 		  multiTooltipTemplate: "<%= datasetLabel %> - <%= value %>",
 		  legendTemplate : '<ul>'
