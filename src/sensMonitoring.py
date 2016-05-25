@@ -12,7 +12,7 @@ class SensorMonitoring:
         self.open()
         
     def open(self):
-        self.conn = sqlite3.connect("monitoring.db")
+        self.conn = sqlite3.connect("monitoring.db",check_same_thread=False)
         
     def close(self):
         self.conn.close()
@@ -40,6 +40,12 @@ class SensorMonitoring:
       VALUES ("+str(pos)+");")
         self.conn.commit()
         #self.conn.close()
+        
+    def insertValue(self, val,  pos, date,time):
+        params = (str(val),date,time,str(pos))
+        
+        self.conn.execute("INSERT INTO Sensori (VALUE, DATA, ORA, POS) VALUES (?,?,?,?);", params)
+        self.conn.commit()
         
     def insertDescByPos(self, desc, pos):
         params = (desc,str(pos))
