@@ -1,0 +1,421 @@
+<html>
+<head>
+<title>Monitoring</title>
+
+</head>
+<body onload="load()">
+<div align="center" class="title">
+	<h2>Monitoraggio dei sensori</h2>
+</div>
+<div align="center">
+<h3>Input analogici</h3>
+<table>
+	<tr>
+		<td align="center">0</td>
+		<td align="center">1</td>
+		<td align="center">2</td>
+		<td align="center">3</td>
+		<td align="center">4</td>
+		<td align="center">5</td>
+		<td align="center">6</td>
+		<td align="center">7</td>
+	</tr>
+	<tr>
+		<td align="center"><img src="Img/red.png" id="an0"></td>
+		<td align="center"><img src="Img/red.png" id="an1"></td>
+		<td align="center"><img src="Img/red.png" id="an2"></td>
+		<td align="center"><img src="Img/red.png" id="an3"></td>
+		<td align="center"><img src="Img/red.png" id="an4"></td>
+		<td align="center"><img src="Img/red.png" id="an5"></td>
+		<td align="center"><img src="Img/red.png" id="an6"></td>
+		<td align="center"><img src="Img/red.png" id="an7"></td>
+	</tr>
+</table>
+<br>
+	<input type="button" name="start" value="Avvia" onclick="startMonitoring()">
+</div>
+
+<br>
+<hr>
+<div align="center">
+<h4>Associazione Sensore</h4>
+	<select id="analog_input_list">
+  		<option value="Sensore_analogico">Sensore analogico</option>
+	</select>
+	<select id="sensor_type">
+  		<option value="Tipo_sensore">Tipo sensore</option>
+	</select>
+	<br>
+	<br>
+	<div id="demo">
+	<input type="button" name="add" value="Associa" onclick="associa()">
+	</div>
+</div>
+<hr>
+<div align="center">
+	<h4>Definisci nuovo sensore</h4>
+	<label>Descrizione sensore</label>
+	<input type="text" id="descr">
+	<input type="button" name="saveBtn" value="Salva" onclick="save()">
+</div>
+<br>
+<div id="message">
+</div>
+<br>
+<hr>
+<div id="monitoring">
+	<div id="param" align="left">
+		<div id="sensori">
+		</div>
+		<div id="calendar">
+			<label>Data inizio</label>
+			<select id="gg">
+				<option value="gg">gg</option>
+			</select>
+			<select id="mm">
+				<option value="mm">mese</option>
+			</select>
+			<select id="aa">
+				<option value="aa">anno</option>
+			</select>
+			<br>
+			<label>Data Fine</label>
+			<select id="ggf">
+				<option value="gg">gg</option>
+			</select>
+			<select id="mmf">
+				<option value="mm">mese</option>
+			</select>
+			<select id="aaf">
+				<option value="aa">anno</option>
+			</select>
+
+		</div>
+		<input type="button" id="send" value="Invia" onclick="Send()">
+	</div>
+	<div id="chart" align="center">
+		<canvas id="myChart" width="400" height="400"></canvas>
+		<div id="legendDiv"></div>
+	</div>
+</div>
+</body>
+<!--<script src="http://www.chartjs.org/assets/Chart.js"></script>-->
+<script src="js\Chart.js"></script>
+<script src="js\Sensore.js"></script>
+<script>
+	var sensori = new Array();
+	function load(){
+		inizializzaCalendario();
+		//chart();
+		loadSensors();
+		update();
+	}
+
+	//valendario per scegliere il periodo da monitorare
+	function inizializzaCalendario(){
+		var gg = document.getElementById("gg");
+		var mm = document.getElementById("mm");
+		var aa = document.getElementById("aa");
+
+		var ggf = document.getElementById("ggf");
+		var mmf = document.getElementById("mmf");
+		var aaf = document.getElementById("aaf");
+
+		clearSelect(gg);
+		clearSelect(mm);
+		clearSelect(aa);
+		clearSelect(ggf);
+		clearSelect(mmf);
+		clearSelect(aaf);
+
+		for(i=1;i<=31;i++){
+			gg.add( new Option( i.toString() ) ); 
+			ggf.add( new Option( i.toString() ) ); 
+			if(i<=12){
+				mm.add( new Option( i.toString() ) ); 
+				mmf.add( new Option( i.toString() ) ); 
+			}
+		}
+
+		year = new Date().getFullYear();
+		for(i=1900;i<=year;i++){
+			aa.add( new Option( i.toString() ) ); 
+			aaf.add( new Option( i.toString() ) ); 
+		}
+
+		aa.selectedIndex = year-1900;
+		aaf.selectedIndex = year-1900;
+
+	}
+
+	
+	//invia dati per il monitoraggio: periodo di monitoraggio e sensori da monitorare
+	function Send(){
+		var gg = document.getElementById("gg").value;
+		var mm = document.getElementById("mm").value;
+		var aa = document.getElementById("aa").value;
+
+		var ggf = document.getElementById("ggf").value;
+		var mmf = document.getElementById("mmf").value;
+		var aaf = document.getElementById("aaf").value;
+
+		//data in formato accettabile da sql
+		var start = aa+"-"+mm+"-"+gg;
+		var end = aaf+"-"+mmf+"-"+ggf;
+		
+		var monitoring = {};
+		monitoring.start = start;
+		monitoring.end = end;
+		monitoring.desc = [];
+
+		for(i=0;i<sensori.length; i++){
+			cb = document.getElementById("cb"+sensori[i].ID);
+			if(cb.checked){
+				monitoring.desc.push(sensori[i].Desc);
+			}
+		}
+
+		//TODO: richiesta ajax per l'avvio del monitoring
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+			if (xhttp.readyState == 4 && xhttp.status == 200) {
+				data = xhttp.responseText;
+				var json = JSON.parse(data);
+				console.log(data);
+				chart(json);
+				
+
+			}
+		};
+
+		
+		xhttp.open("POST", "storyboard", true);
+		xhttp.send(JSON.stringify(monitoring));
+
+
+	}
+
+	//aggiorna lo stato dei sensori (quali sono collegati e quali no)
+	function update(){
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+			if (xhttp.readyState == 4 && xhttp.status == 200) {
+				//document.getElementById("message").innerHTML = xhttp.responseText;
+				data = xhttp.responseText;
+				var json = JSON.parse(data);
+
+				an_input = document.getElementById("analog_input_list");
+				clearSelect(an_input);
+		
+				//svuoto il container dove vanno le checkbox
+				var container = document.getElementById("sensori");
+				container.innerHTML="";
+				sensori = [];
+				
+				for(i=0;i<json[0].length;i++){
+					elName = "an"+json[i][0];
+					img = document.getElementById(elName);
+					img.src="Img/green.png";
+					img.title=json[i][1];
+					an_input.add( new Option( json[i][0].toString() ) ); 
+					addCheckBox(json[i][0],json[i][1]);
+				}
+
+				window.setTimeout(update, 60000)//aggiorno lo status dei sensori ogni 60 secondi
+			}
+		};
+		xhttp.open("POST", "getSensorStatus", true);
+		xhttp.send();
+	}
+
+	//avvia il monitoraggio (ovvero il passaggio dei valori dei sensori al server per la registrazione di essi nel DB)
+	function startMonitoring(){
+		//TODO: richiesta ajax per l'avvio del monitoring
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+			if (xhttp.readyState == 4 && xhttp.status == 200) {
+				//document.getElementById("demo").innerHTML = xhttp.responseText;
+				
+
+			}
+		};
+		xhttp.open("POST", "monitoring", true);
+		xhttp.send();
+	}
+
+	//carica i sensori che esistono nel DB
+	function loadSensors() {
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+			if (xhttp.readyState == 4 && xhttp.status == 200) {
+				//document.getElementById("demo").innerHTML = xhttp.responseText;
+				data = xhttp.responseText;
+				var json = JSON.parse(data);
+
+				s_type = document.getElementById("sensor_type");
+				clearSelect(s_type);
+				for(i =0;i<json.sensorList.length;i++)
+					s_type.add(new Option( json.sensorList[i].descr));
+
+			}
+		};
+		xhttp.open("POST", "userSensorList", true);
+		xhttp.send();
+	}
+
+	//associa un sensori posto su una porta analogica ad un tipo di sensore già esistente nel db
+	function associa(){
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+			if (xhttp.readyState == 4 && xhttp.status == 200) {
+				document.getElementById("message").innerHTML = xhttp.responseText;
+
+			}
+		};
+		xhttp.open("POST", "associa", true);
+		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+		params = "pos="+document.getElementById("analog_input_list").value+"&descr="+document.getElementById("sensor_type").value
+		params = encodeURI(params)
+		xhttp.send(params);
+	}
+
+	//aggiunge un nuovo tipo di sensore nel db
+	function save(){
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+			if (xhttp.readyState == 4 && xhttp.status == 200) {
+				document.getElementById("message").innerHTML = xhttp.responseText;
+				loadSensors();
+
+			}
+		};
+		xhttp.open("POST", "addSensor", true);
+		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+		xhttp.send("descr="+document.getElementById("descr").value);
+
+	}
+
+	function clearSelect(select){
+		for (var option in select){
+		    select.remove(option);
+		}
+	}
+
+
+	//visualizza il grafico (andamento dei sensori)
+	function chart(json_data){
+		var ctx = document.getElementById("myChart").getContext("2d");
+		var data = {};
+		data.datasets = [];
+		data.labels = [];
+		k = 0;
+		for(i =0;i<json_data.length;i++){
+			for(j=0;j<json_data[i].giorno.length; j++)
+				data.labels[k++] = json_data[i].giorno[j];
+			var r = Math.floor((Math.random() * 255) + 0);
+			var g = Math.floor((Math.random() * 255) + 0);
+			var b = Math.floor((Math.random() * 255) + 0);
+
+			data.datasets[i] = {};
+
+			data.datasets[i].label = json_data[i].label;
+			//data.datasets[i].data = json_data[i].data;
+			data.datasets[i].data = [];
+			for(ind = 0; ind<json_data[i].data.length; ind++)
+				data.datasets[i].data[ind] = parseFloat(json_data[i].data[ind]);
+
+			data.datasets[i].pointStrokeColor= "#fff", 
+		    data.datasets[i].pointHighlightFill= "#fff", 
+		    data.datasets[i].fillColor= "rgba("+r+","+g+","+b+",0.2)"; 
+			data.datasets[i].strokeColor= "rgba("+r+","+g+","+b+",1)"; 
+		    data.datasets[i].pointColor= "rgba("+r+","+g+","+b+",1)"; 
+
+		    r = Math.floor((Math.random() * 255) + 0);
+			g = Math.floor((Math.random() * 255) + 0);
+			b = Math.floor((Math.random() * 255) + 0);
+		    data.datasets[i].pointHighlightStroke= "rgba("+r+","+g+","+b+",1)";
+		}
+		/*
+		var options = {
+ 	    legendTemplate : '<ul>'
+                  +'<% for (var i=0; i<datasets.length; i++) { %>'
+                    +'<li>'
+                    +'<span style=\"background-color:<%=datasets[i].lineColor%>\"></span>'
+                    +'<% if (datasets[i].label) { %><%= datasets[i].label %><% } %>'
+                  +'</li>'
+                +'<% } %>'
+              +'</ul>'
+  		}
+			*/
+
+		console.log(JSON.stringify(data));
+		/*
+		var data = { 
+ 
+		    labels: ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto"], 
+		    datasets: [ 
+		        { 
+		            label: "Temperature 2013", 
+		            fillColor: "rgba(99,240,220,0.2)", 
+		            strokeColor: "rgba(99,240,220,1)", 
+		            pointColor: "rgba(99,240,220,1)", 
+		            pointStrokeColor: "#fff", 
+		            pointHighlightFill: "#fff", 
+		            pointHighlightStroke: "rgba(220,220,220,1)", 
+		            data: [8, 11, 18, 22, 24, 26, 34, 39] 
+		        }, 
+		        { 
+		            label: "Temperature 2014", 
+		            fillColor: "rgba(205,99,151,0.2)", 
+		            strokeColor: "rgba(205,99,151,1)", 
+		            pointColor: "rgba(205,99,151,1)", 
+		            pointStrokeColor: "#fff", 
+		            pointHighlightFill: "#fff", 
+		            pointHighlightStroke: "rgba(151,187,205,1)", 
+		            data: [16, 18, 22, 24, 26, 28, 32, 36] 
+		        } 
+		    ] 
+		}; 
+		*/
+
+		var options = {
+		  multiTooltipTemplate: "<%= datasetLabel %> - <%= value %>",
+		  legendTemplate : '<ul>'
+                  +'<% for (var i=0; i<datasets.length; i++) { %>'
+                    +'<li>'
+                    +'<span style=\"background-color:<%=datasets[i].strokeColor%>\">'
+                    +'<% if (datasets[i].label) { %><%= datasets[i].label %><% } %></span>'
+                  +'</li>'
+                +'<% } %>'
+              +'</ul>'
+		  }
+		var myNewChart = new Chart(ctx).Line(data, options);
+		document.getElementById("legendDiv").innerHTML = myNewChart.generateLegend();
+		
+	}
+
+	//aggiunge dinamicamente checkbox che si riferiscono ai sensori che sono al momento collegati alle porte analogiche
+	//sulla base dell'associazione fatta
+	function addCheckBox(id, name){
+		var container = document.getElementById("sensori");
+
+		var checkbox = document.createElement('input');
+		checkbox.type = "checkbox";
+		checkbox.name = id;
+		checkbox.value = name;
+		checkbox.id = "cb"+id;
+
+		var label = document.createElement('label')
+		label.htmlFor = name;
+		label.appendChild(document.createTextNode(name));
+
+		var s = new Sensore(id,name);
+		sensori.push(s);
+		
+		container.appendChild(checkbox);
+		container.appendChild(label);
+		linebreak = document.createElement("br");
+		container.appendChild(linebreak);
+	}
+</script>
+</html>

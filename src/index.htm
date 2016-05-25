@@ -1,0 +1,162 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Phidgets Interface</title>
+<style>
+#parent{
+	margin:30px;
+}
+.right {
+    float: right;
+    overflow: auto;
+    
+}
+
+.left{
+	float: left;
+	overflow: auto;
+}
+
+.center {
+	margin-left:200px;
+	float: left;
+	overflow: auto;
+}
+
+#message{
+	display: none;
+	position: absolute;
+	top:60%;
+	left:10%;
+	border: solid red 1px;
+	color: red;
+}
+</style>
+</head>
+<body>
+	<div id="parent" align="center">
+	<h1>Phidgets Interface GUI Client</h1>
+		<div class="left">
+				<table style="border-style:solid ">
+					<tr>
+					<td>
+					<h2>Registrazione</h2>
+					</td>
+					</tr>
+					<tr>
+					<td><label>Nome</label></td><td>
+					<input type="text" name="n" id="n">
+					</td>
+					</tr>
+					<tr>
+					<td><label>Cognome</label></td><td>
+					<input type="text" name="c" id="c">
+					</td>
+					</tr>
+					<tr>
+					<td><label>Compagnia</label></td><td>
+					<input type="text" name="cp" id="cp">
+					</td>
+					</tr>
+					<tr>
+					<td><label>Username</label></td><td>
+					<input type="text" name="u" id="u">
+					</td>
+					</tr>
+					<tr>
+					<td><label>Password</label></td><td>
+					<input type="password" name="p" id="p">
+					</td>
+					</tr>
+					<tr>
+					<td><label>Ripeti password</label></td><td>
+					<input type="password" name="rp" id="rp">
+					</td>
+					</tr>
+					<tr>
+					<td><input type="hidden" name="op" id="op" value="reg">
+					<input type="button" value="Invia" onclick="Registra()"></td>
+					</tr>
+				</table>
+		</div>
+
+		<div class="center" align="center">
+			<img src="Img/1019.jpg" height="180" width="270">
+		</div>
+
+		<div class="right">
+			<form method="POST" action="login">
+				<table style="border-style:solid ">
+					<tr>
+					<td>
+					<h2>Login</h2>
+					</td>
+					</tr>
+					<tr>
+					<td><label>Username</label></td><td>
+					<input type="text" name="u" id="ul">
+					</td>
+					</tr>
+					<tr>
+					<td><label>Password</label></td><td>
+					<input type="password" name="p" id=pl>
+					</td>
+					</tr>
+					<tr>
+					<td><input type="hidden" name="op" id="opl" value="log">
+					<input type="button" value="Login" onclick="Login()"></td>
+					</tr>
+				</table>
+			</form>
+		</div>
+	</div>
+	
+	<div align="center" id="message">Ciao mondo</div>
+	
+<script type="text/javascript">
+	function Registra(){
+		document.getElementById("message").style.display="none";
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+			if (xhttp.readyState == 4 && xhttp.status == 200) {
+				
+					document.getElementById("message").style.display="inline-block";
+					document.getElementById("message").innerHTML = xhttp.responseText;
+				
+
+			}
+		};
+		xhttp.open("POST", "registrazione", true);
+		params = "n="+document.getElementById("n").value+"&c="+document.getElementById("c").value+"&cp="+document.getElementById("cp").value+"&u="+document.getElementById("u").value+"&p="+document.getElementById("p").value+"&rp="+document.getElementById("rp").value+"&op="+document.getElementById("op").value
+		params = encodeURI(params)
+		xhttp.send(params);
+
+	}
+
+	function Login(){
+		console.log( "invio richiesta");
+		document.getElementById("message").style.display="none";
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+			if (xhttp.readyState == 4 && xhttp.status == 200) {
+				if(xhttp.responseText=="Login OK")
+					 window.location = "/monitoring.htm";
+				else{
+					document.getElementById("message").style.display="inline-block";
+					document.getElementById("message").innerHTML = xhttp.responseText;
+					console.log( xhttp.responseText);
+				}
+
+			}
+		};
+		console.log( "invio richiesta");
+		xhttp.open("POST", "login", true);
+		params = "u="+document.getElementById("ul").value+"&p="+document.getElementById("pl").value+"&op="+document.getElementById("opl").value
+		params = encodeURI(params)
+		xhttp.send(params);
+
+	}
+
+</script>
+</body>
+</html>

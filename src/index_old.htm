@@ -1,0 +1,78 @@
+<html>
+<head>
+<title>Phidgets Interface</title>
+</head>
+<body>
+<table align="center">
+<tr>
+<td>
+<form method="POST" action="registrazione">
+<table style="border-right: 1px solid #cdd0d4;" >
+	<tr>
+	<td>
+	<h2>Registrazione</h2>
+	</td>
+	</tr>
+	<tr>
+	<td><label>Nome</label></td><td>
+	<input type="text" name="n">
+	</td>
+	</tr>
+	<tr>
+	<td><label>Cognome</label></td><td>
+	<input type="text" name="c">
+	</td>
+	</tr>
+	<tr>
+	<td><label>Compagnia</label></td><td>
+	<input type="text" name="cp">
+	</td>
+	</tr>
+	<tr>
+	<td><label>Username</label></td><td>
+	<input type="text" name="u">
+	</td>
+	</tr>
+	<tr>
+	<td><label>Password</label></td><td>
+	<input type="password" name="p">
+	</td>
+	</tr>
+	<tr>
+	<td><label>Ripeti password</label></td><td>
+	<input type="password" name="rp">
+	</td>
+	</tr>
+</table>
+<input type="hidden" name="op" value="reg">
+<input type="submit" value="Invia">
+</form>
+</td>
+<td></td>
+<td>
+<form method="POST" action="login">
+<table>
+	<tr>
+	<td>
+	<h2>Login</h2>
+	</td>
+	</tr>
+	<tr>
+	<td><label>Username</label></td><td>
+	<input type="text" name="u">
+	</td>
+	</tr>
+	<tr>
+	<td><label>Password</label></td><td>
+	<input type="password" name="p">
+	</td>
+	</tr>
+</table>
+<input type="hidden" name="op" value="log">
+<input type="submit" value="Login">
+</form>
+</td>
+</tr>
+</table>
+</body>
+</html>

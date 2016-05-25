@@ -1,0 +1,107 @@
+<html>
+<head>
+<title>Phidgets Interface</title>
+<style>
+#parent{
+	margin:30px;
+}
+.right {
+    float: right;
+    overflow: auto;
+    
+}
+
+.left{
+	float: left;
+	overflow: auto;
+}
+
+.center {
+	margin-left:200px;
+	float: left;
+	overflow: auto;
+}
+</style>
+</head>
+<body>
+	<div id="parent" align="center">
+	<h1>Phidgets Interface GUI Client</h1>
+		<div class="left">
+			<form method="POST" action="registrazione">
+				<table style="border-style:solid ">
+					<tr>
+					<td>
+					<h2>Registrazione</h2>
+					</td>
+					</tr>
+					<tr>
+					<td><label>Nome</label></td><td>
+					<input type="text" name="n">
+					</td>
+					</tr>
+					<tr>
+					<td><label>Cognome</label></td><td>
+					<input type="text" name="c">
+					</td>
+					</tr>
+					<tr>
+					<td><label>Compagnia</label></td><td>
+					<input type="text" name="cp">
+					</td>
+					</tr>
+					<tr>
+					<td><label>Username</label></td><td>
+					<input type="text" name="u">
+					</td>
+					</tr>
+					<tr>
+					<td><label>Password</label></td><td>
+					<input type="password" name="p">
+					</td>
+					</tr>
+					<tr>
+					<td><label>Ripeti password</label></td><td>
+					<input type="password" name="rp">
+					</td>
+					</tr>
+					<tr>
+					<td><input type="hidden" name="op" value="reg">
+					<input type="submit" value="Invia"></td>
+					</tr>
+				</table>
+			
+			</form>
+		</div>
+		<div class="center" align="center">
+			<img src="Img/1019.jpg" height="180" width="270">
+		</div>
+
+		<div class="right">
+			<form method="POST" action="login">
+				<table style="border-style:solid ">
+					<tr>
+					<td>
+					<h2>Login</h2>
+					</td>
+					</tr>
+					<tr>
+					<td><label>Username</label></td><td>
+					<input type="text" name="u">
+					</td>
+					</tr>
+					<tr>
+					<td><label>Password</label></td><td>
+					<input type="password" name="p">
+					</td>
+					</tr>
+					<tr>
+					<td><input type="hidden" name="op" value="log">
+					<input type="submit" value="Login"></td>
+					</tr>
+				</table>
+			
+			</form>
+		</div>
+	</div>
+</body>
+</html>
