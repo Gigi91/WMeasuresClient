@@ -126,6 +126,7 @@
 
 			}
 		};
+
 		xhttp.open("POST", "registrazione", true);
 		params = "n="+document.getElementById("n").value+"&c="+document.getElementById("c").value+"&cp="+document.getElementById("cp").value+"&u="+document.getElementById("u").value+"&p="+document.getElementById("p").value+"&rp="+document.getElementById("rp").value+"&op="+document.getElementById("op").value
 		params = encodeURI(params)
@@ -134,14 +135,15 @@
 	}
 
 	function Login(){
-		console.log( "invio richiesta");
 		document.getElementById("message").style.display="none";
 		var xhttp = new XMLHttpRequest();
 		xhttp.onreadystatechange = function() {
 			if (xhttp.readyState == 4 && xhttp.status == 200) {
-				if(xhttp.responseText=="Login OK")
+				if(xhttp.responseText.endsWith("Login OK")){
+					 setCookie(document.getElementById("ul").value);
+					// console.log(document.cookie);
 					 window.location = "/monitoring.htm";
-				else{
+				}else{
 					document.getElementById("message").style.display="inline-block";
 					document.getElementById("message").innerHTML = xhttp.responseText;
 					console.log( xhttp.responseText);
@@ -149,12 +151,17 @@
 
 			}
 		};
-		console.log( "invio richiesta");
+		
 		xhttp.open("POST", "login", true);
 		params = "u="+document.getElementById("ul").value+"&p="+document.getElementById("pl").value+"&op="+document.getElementById("opl").value
 		params = encodeURI(params)
 		xhttp.send(params);
 
+	}
+
+	function setCookie(value) {
+    	document.cookie = "U" + "=" + value+ "; ";
+    	console.log(document.cookie);
 	}
 
 </script>

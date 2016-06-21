@@ -4,6 +4,9 @@
 
 </head>
 <body onload="load()">
+<div>
+<input type="button" value="Logout" onclick="Logout()">
+</div>
 <div align="center" class="title">
 	<h2>Monitoraggio dei sensori</h2>
 </div>
@@ -30,11 +33,21 @@
 		<td align="center"><img src="Img/red.png" id="an6"></td>
 		<td align="center"><img src="Img/red.png" id="an7"></td>
 	</tr>
+	<tr>
+		<td align="center"><label id="l0"></label></td>
+		<td align="center"><label id="l1"></label></td>
+		<td align="center"><label id="l2"></label></td>
+		<td align="center"><label id="l3"></label></td>
+		<td align="center"><label id="l4"></label></td>
+		<td align="center"><label id="l5"></label></td>
+		<td align="center"><label id="l6"></label></td>
+		<td align="center"><label id="l7"></label></td>
+	</tr>
 </table>
 <br>
-    <label>Duranta monitoraggio (in minuti)</label>
+    <label>Frequenza trasmissione dati(in minuti)</label>
     <input type="text" id="durata">
-	<input type="button" name="start" id="start" value="Avvia" onclick="startMonitoring()">
+	<input type="button" name="start" id="start" value="Avvia" onclick="startMonitoring_click()">
 </div>
 
 <br>
@@ -47,11 +60,8 @@
 	<select id="sensor_type">
   		<option value="Tipo_sensore">Tipo sensore</option>
 	</select>
-	<br>
-	<br>
-	<div id="demo">
 	<input type="button" name="add" value="Associa" onclick="associa()">
-	</div>
+	
 </div>
 <hr>
 <div align="center">
@@ -66,9 +76,20 @@
 <br>
 <hr>
 <div id="monitoring">
+	<h5 style="text-align:center">Grafico dati monitorati</h5>
 	<div id="param" align="left">
 		<div id="sensori">
+			<select id="sensori_">
+	  			<option value="sensori">Tipo sensore</option>
+			</select>
+			<input type="button" name="add_sensor" value="Aggiungi" onclick="AddToMonitor()">
+			<input type="button" name="clear" value="Clear" onclick="document.getElementById('sensor_list').innerHTML=''; sensorListToMonitor = [];">
+			
+			<ul id="sensor_list" style="list-style-type:disc">
+  
+			</ul>
 		</div>
+		<br>	
 		<div id="calendar">
 			<label>Data inizio</label>
 			<select id="gg">
@@ -96,10 +117,10 @@
 		<input type="button" id="send" value="Invia" onclick="Send()">
 	</div>
 	<div id="chart" align="center">
-		<h5>Grafico dati monitorati</h5>
+		
 		<canvas id="myChart" width="400" height="400"></canvas>
+		<div id="legendDiv"></div><br>
 		<div id="statistics"></div>
-		<div id="legendDiv"></div>
 
 	</div>
 </div>
@@ -109,11 +130,21 @@
 <script src="js\Sensore.js"></script>
 <script>
 	var sensori = new Array();
+	var sensorListToMonitor = []; //lista di sensori scelti dall'utente da monitorare
+	var stato_monitoraggio = 0; 	//indica se è avviato il monitoraggio (1) o no (0)
+	var monitoring_timer;
+
 	function load(){
-		inizializzaCalendario();
-		//chart();
-		loadSensors();
-		update();
+		if(document.cookie==""){
+			window.location ="/";
+		}else{
+			console.log(document.cookie);
+			inizializzaCalendario();
+			//chart();
+			loadSensors();
+			update();
+			window.setInterval(update, 10000);//aggiorno lo status dei sensori ogni 10 secondi
+		}
 	}
 
 	//valendario per scegliere il periodo da monitorare
@@ -173,19 +204,37 @@
 		monitoring.end = end;
 		monitoring.desc = [];
 
+
+		for(var i = 0; i < sensorListToMonitor.length; ++i){
+			console.log(sensorListToMonitor[i]);
+			monitoring.desc.push(sensorListToMonitor[i]);
+		}
+		/*
 		for(var i=0;i<sensori.length; i++){
 			var cb = document.getElementById("cb"+sensori[i].ID);
 			if(cb.checked){
 				monitoring.desc.push(sensori[i].Desc);
 			}
-		}
+		}*/
 
 		//TODO: richiesta ajax per l'avvio del monitoring
 		var xhttp = new XMLHttpRequest();
 		xhttp.onreadystatechange = function() {
 			if (xhttp.readyState == 4 && xhttp.status == 200) {
+
 				data = xhttp.responseText;
+				console.log(data);
 				var json = JSON.parse(data);
+				console.log("storyboard risposta arrivata");
+				
+				var stat_string="";
+				for(var i= 0;i<json.length; i++){
+					var media = average(json[i].data);
+					var sd = ds(json[i].data, media);
+					stat_string +=json[i].label+":"+media+"&plusmn;"+sd+" &Omega;"+"<br>";
+					
+				}
+				document.getElementById("statistics").innerHTML = stat_string;
 				console.log(data);
 				chart(json);
 				
@@ -202,6 +251,7 @@
 
 	//aggiorna lo stato dei sensori (quali sono collegati e quali no)
 	function update(){
+		console.log("update");
 		var xhttp = new XMLHttpRequest();
 		xhttp.onreadystatechange = function() {
 			if (xhttp.readyState == 4 && xhttp.status == 200) {
@@ -214,30 +264,44 @@
 		
 				//svuoto il container dove vanno le checkbox
 				var container = document.getElementById("sensori");
-				container.innerHTML="";
+				//container.innerHTML="";
 				sensori = [];
 				
-				for(i=0;i<json[0].length;i++){
-					elName = "an"+json[i][0];
-					img = document.getElementById(elName);
+				for(var i=0;i<json[0].length;i++){
+					var elName = "an"+json[i][0];
+					var img = document.getElementById(elName);
+
+					//scrivo il valore del sensore
+					var value = parseFloat(json[i][2]);
+					document.getElementById("l"+json[i][0]).innerHTML = String((value).toFixed(2))+"&Omega;";
+
 					img.src="Img/green.png";
 					img.title=json[i][1];
 					an_input.add( new Option( json[i][0].toString() ) ); 
-					addCheckBox(json[i][0],json[i][1]);
+					//addCheckBox(json[i][0],json[i][1]);
 				}
 
-				window.setTimeout(update, 60000);//aggiorno lo status dei sensori ogni 60 secondi
 			}
 		};
 		xhttp.open("POST", "getSensorStatus", true);
 		xhttp.send();
 	}
 
+	function startMonitoring_click(){
+		if(stato_monitoraggio==0){
+			stato_monitoraggio = 1;
+			document.getElementById("start").value="Stop";
+			var time = document.getElementById("durata").value;
+			monitoring_timer = window.setInterval(startMonitoring, time*60000);//invio i dati
+		}else{
+			stato_monitoraggio = 0;
+			document.getElementById("start").value="Avvia";
+			window.clearInterval(monitoring_timer);
+		}
+
+	}
 	//avvia il monitoraggio (ovvero il passaggio dei valori dei sensori al server per la registrazione di essi nel DB)
 	function startMonitoring(){
-		//TODO: richiesta ajax per l'avvio del monitoring
-		var time = document.getElementById("durata").value
-		document.getElementById("start").disabled=true;
 		var xhttp = new XMLHttpRequest();
 		xhttp.onreadystatechange = function() {
 			if (xhttp.readyState == 4 && xhttp.status == 200) {
@@ -248,7 +312,6 @@
 		};
 		xhttp.open("POST", "monitoring", true);
 		xhttp.send();
-		window.setTimeout(startMonitoring, time*60000);//invio i dati
 	}
 
 	//carica i sensori che esistono nel DB
@@ -261,13 +324,18 @@
 				var json = JSON.parse(data);
 
 				var s_type = document.getElementById("sensor_type");
+				var sensori_ = document.getElementById("sensori_");
 				clearSelect(s_type);
-				for(i =0;i<json.sensorList.length;i++)
+				clearSelect(sensori_);
+				for(i =0;i<json.sensorList.length;i++){
+					sensori_.add(new Option(json.sensorList[i].descr));
 					s_type.add(new Option( json.sensorList[i].descr));
+				}
 
 			}
 		};
 		xhttp.open("POST", "userSensorList", true);
+		//xhttp.setRequestHeader("setCookie", document.cookie);
 		xhttp.send();
 	}
 
@@ -387,5 +455,52 @@
 		linebreak = document.createElement("br");
 		container.appendChild(linebreak);
 	}
+
+	function average(data){
+		var sum = 0.0;
+		for(var i=0;i<data.length; i++)
+			sum += Math.floor(data[i]);
+		return (sum/data.length).toFixed(2);
+	}
+
+	function ds(data, mean){
+		var sum = 0.0;
+		//var mean = average(data);
+
+		for(var i=0;i<data.length; i++)
+			sum += Math.pow((Math.floor(data[i]) - mean),2);
+
+		sd = (Math.sqrt(sum)/data.length).toFixed(2);
+		return sd;
+
+	}
+
+	function AddToMonitor(){
+		var s = document.getElementById("sensori_").value;
+		if(sensorListToMonitor.indexOf(s)==-1){
+			var el = document.createElement("li");
+			el.appendChild(document.createTextNode(s));
+			document.getElementById("sensor_list").appendChild(el);
+			sensorListToMonitor.push(document.getElementById("sensori_").value);
+		}
+	}
+
+	function Logout(){
+		document.cookie = "u=; expires=Thu, 01 Jan 1970 00:00:00 UTC"; //imposto il cookie a una data passata così scade e viene cancellato
+		window.location ="/";
+		/*
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+			if (xhttp.readyState == 4 && xhttp.status == 200) {
+				//document.getElementById("demo").innerHTML = xhttp.responseText;
+				location.href="http://localhost:8080";
+
+			}
+		};
+		xhttp.open("POST", "logout", true);
+		xhttp.send();
+*/
+	}
+
 </script>
 </html>

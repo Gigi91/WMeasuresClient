@@ -6,7 +6,6 @@ Implementa il web server utilizzato per avere come interfaccia lato client una p
 '''
 
 from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
-import Cookie
 from os import curdir, sep
 import webclient
 import phidgets
@@ -243,7 +242,13 @@ class myHandler(BaseHTTPRequestHandler):
             client = webclient.WebClient()
             data = client.sendRequest("/wmeasure/wmeasuresSrv/src/controller/utentecontroller.php", p)
             if data=="Login OK":
+                
                 self.wfile.write(data)
+
+#                 self.path="/monitoring.htm"
+#                 self.send_response(302)
+#                 self.send_header('Location', self.path)
+#                 self.end_headers()
                 return
             else:
                 print data
@@ -280,15 +285,29 @@ class myHandler(BaseHTTPRequestHandler):
         f.close()
     
     def readUsername(self):
-        # f = open("username","r")
-        # username = f.read()
-        # return username
-        #####
-        if "Cookie" in self.headers:
-            c = Cookie.SimpleCookie(self.headers["Cookie"])
-            print c['U'].value
-            return c['U'].value
-        return None
+        f = open("username","r")
+        username = f.read()
+        return username
+
+     def WriteCookie(self, value):
+37     # Shows how to read form values from a POST request
+38     # and write a cookie with a value from the form
+39     self.send_response(200)
+45     self.send_header('Content-type', 'text/html')
+47     c = Cookie.SimpleCookie()
+48     c['value'] = value
+49     self.send_header('Set-Cookie', c.output(header=''))
+50       self.end_headers()
+51       
+52     else:
+53       self.end_headers()
+54       self.wfile.write("No username ?")
+55 
+56   def ReadCookie(self):
+57     if "Cookie" in self.headers:
+58       c = Cookie.SimpleCookie(self.headers["Cookie"])
+59       return c['value'].value
+60     return None
 
 try:
 
@@ -298,24 +317,24 @@ try:
     if os.path.isfile("monitoring"): 
         os.remove("monitoring")
     #ATTENZIONE DA ELIMINARE SOLO PER PROVA!!!
-    # monitoring = sm.SensorMonitoring()
-    # monitoring.open()
-    # monitoring.create()
-    # monitoring.insertPos(4)
-    # date = datetime.now().strftime('%Y-%m-%d')
-    # time = datetime.now().strftime('%H:%M:%S')
-    # monitoring.insertValueByPos(152.36, 4, date, time)
-    # monitoring.insertDescByPos("Resistenza da 180Ohm", 4)
-    # monitoring.insertPos(6)
-    # time = datetime.now().strftime('%H:%M:%S')
-    # monitoring.insertValueByPos(0.32, 6, date, time)
-    # monitoring.insertDescByPos("Resistenza da 330Ohm", 6)
-    # monitoring.close()
+    monitoring = sm.SensorMonitoring()
+    monitoring.open()
+    monitoring.create()
+    monitoring.insertPos(4)
+    date = datetime.now().strftime('%Y-%m-%d')
+    time = datetime.now().strftime('%H:%M:%S')
+    monitoring.insertValueByPos(152.36, 4, date, time)
+    monitoring.insertDescByPos("Resistenza da 180Ohm", 4)
+    monitoring.insertPos(6)
+    time = datetime.now().strftime('%H:%M:%S')
+    monitoring.insertValueByPos(0.32, 6, date, time)
+    monitoring.insertDescByPos("Resistenza da 330Ohm", 6)
+    monitoring.close()
     ##########
     
     #instanzio l'oggetto per interfacciarmi con la scheda di acquisizione phidgets
-    ph = phidgets.Phidgets()
-    ph.run()
+    #ph = phidgets.Phidgets()
+    #ph.run()
 
     #Create a web server and define the handler to manage the
     #incoming request

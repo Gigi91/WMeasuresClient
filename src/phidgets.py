@@ -20,19 +20,20 @@ class Phidgets:
         self.running = True
         
     def ponteDiWheatstone(self):
-        R1 = 1000.0
-        R2 = 1000.0
-        R3 = 1000.0
+        R1 = 1000.0#1KOhm
+        R2 = 1000.0#1KOhm
+        R3 = 1000.0#1KOhm
         Vs = 5.0
         
         for pos, v in enumerate(self.V2list):
             if v==0:
                 continue
             
-            Vm = v-self.V1
+            Vm = v-self.V1 #ingresso differenziale
             print Vm
+            #formula per il calcolo della resistenza
             p1 = R3/(R1+R3) + (Vm/Vs)
-            p2= 1 - p1
+            p2 = 1 - p1
             Rx = R2*(p1/p2);
             
             #
@@ -46,7 +47,7 @@ class Phidgets:
         if val != 1:
             r1 = 1000
             Vref = 12 #5V tensione applicata al partitore
-            V2 = (5.0/1024.0)*val #tensione letta ai capi della resistenza
+            V2 = (5.0/1023.0)*val #tensione letta ai capi della resistenza
             r2 =  r1*V2/(Vref-V2)
             print ("la resistenza vale %f: " % r2)
         
@@ -60,10 +61,10 @@ class Phidgets:
             return
         
         if e.index == 0:#V1 va collegato sempre sul pin 0
-            self.V1 = (5.0/1024.0)*e.value 
+            self.V1 = (5.0/1023.0)*e.value 
             print self.V1
         else:
-            val = (5.0/1024.0)*e.value
+            val = (5.0/1023.0)*e.value
             self.V2list[e.index-1]=val #corrispondenza porta analogica posizione nella lista
             print str(self.V2list)
         
@@ -103,10 +104,10 @@ class Phidgets:
                     self.interfaceKit.closePhidget()
                 except PhidgetException as e:
                     exit(1)
-                print("Exiting....")
+                print("Assicurarsi di aver collegato la scheda di acquisizione Phidget 1019 al PC. Exiting....")
                 exit(1)
             else:
-                print "Scheda di acquisizione collegata"
+                print "Scheda di acquisizione rilevata."
                 
             for i in range(self.interfaceKit.getSensorCount()):
                 try:

@@ -72,10 +72,10 @@ class SensorMonitoring:
         return val
     
     def getSensorList(self):
-        cursor = self.conn.execute("SELECT POS,DESCRIPTION FROM Sensori;")
+        cursor = self.conn.execute("SELECT POS,DESCRIPTION, VALUE FROM Sensori;")
         sList = []
         for row in cursor:
-            s = (row[0], row[1]) 
+            s = (row[0], row[1], row[2]) 
             sList.append(s)
         #self.conn.close()
         return sList
